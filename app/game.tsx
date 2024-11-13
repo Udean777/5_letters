@@ -4,6 +4,7 @@ import { Colors } from "@/constants/Colors";
 import OnScreenKeyboard from "@/components/OnScreenKeyboard";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { allWords } from "@/utils/allWords";
 
 const ROWS = 6;
 
@@ -18,20 +19,114 @@ const Page = () => {
     new Array(ROWS).fill(new Array(5).fill(""))
   );
   const [currRow, setCurrRow] = React.useState(0);
-  const [currCol, setCurrCol] = React.useState(0);
+  const [currCol, _setCurrCol] = React.useState(0);
 
   // State untuk set 6 row dan 5 kolom, dengan warna hijau jika hurufnya benar
   // dan warna kuning jika hurufnya benar tapi posisinya salah
   // dan warna abu-abu jika hurufnya dan posisinya salah
-  const [greenLetters, setGreenLetters] = React.useState<string[]>(["a", "b"]);
-  const [yellowLetters, setYellowLetters] = React.useState<string[]>([
-    "c",
-    "d",
-  ]);
-  const [grayLetters, setGrayLetters] = React.useState<string[]>(["e", "f"]);
+  const [greenLetters, setGreenLetters] = React.useState<string[]>([]);
+  const [yellowLetters, setYellowLetters] = React.useState<string[]>([]);
+  const [grayLetters, setGrayLetters] = React.useState<string[]>([]);
+  const [word, setWord] = React.useState<string>("pohon");
+  const wordLetters = word.split("");
+
+  const colStateRef = React.useRef<any>(currCol);
+  const setCurrCol = (col: number) => {
+    colStateRef.current = col;
+    _setCurrCol(col);
+  };
 
   const addKey = (key: string) => {
     console.log("Addkey", key);
+    const newRows = [...rows.map((row) => [...row])];
+
+    if (key === "ENTER") {
+      checkWord();
+    } else if (key === "BACKSPACE") {
+      if (colStateRef.current === 0) {
+        newRows[currRow][0] = "";
+        setRows(newRows);
+        return;
+      }
+
+      newRows[currRow][colStateRef.current - 1] = "";
+      setRows(newRows);
+      setCurrCol(colStateRef.current - 1);
+    } else if (colStateRef.current >= newRows[currRow].length) {
+      return;
+    } else {
+      newRows[currRow][colStateRef.current] = key;
+      setRows(newRows);
+      setCurrCol(colStateRef.current + 1);
+    }
+  };
+
+  const checkWord = () => {
+    const currentWord = rows[currRow].join("");
+
+    if (currentWord.length < word.length) {
+      console.log("Need 5 letters tho");
+      return;
+    }
+
+    if (!allWords.includes(currentWord)) {
+      console.log("Not a word");
+    }
+
+    const newGreenLetters: string[] = [];
+    const newYellowLetters: string[] = [];
+    const newGrayLetters: string[] = [];
+
+    currentWord.split("").forEach((letter, index) => {
+      if (letter === wordLetters[index]) {
+        newGreenLetters.push(letter);
+      } else if (wordLetters.includes(letter)) {
+        newYellowLetters.push(letter);
+      } else {
+        newGrayLetters.push(letter);
+      }
+    });
+
+    setGreenLetters([...greenLetters, ...newGreenLetters]);
+    setYellowLetters([...yellowLetters, ...newYellowLetters]);
+    setGrayLetters([...grayLetters, ...newGrayLetters]);
+
+    setTimeout(() => {
+      if (currentWord === word) {
+        console.log("You win");
+      } else if (currRow + 1 >= rows.length) {
+        console.log("You lose");
+      }
+    }, 1500);
+
+    setCurrRow(currRow + 1);
+    setCurrCol(0);
+  };
+
+  const getCellColor = (cell: string, rowIndex: number, cellIndex: number) => {
+    if (currRow > rowIndex) {
+      if (wordLetters[cellIndex] === cell) {
+        return Colors.light.green;
+      } else if (wordLetters.includes(cell)) {
+        return Colors.light.yellow;
+      } else {
+        return Colors.light.gray;
+      }
+    }
+
+    return "transparent";
+  };
+
+  const getBorderColor = (
+    cell: string,
+    rowIndex: number,
+    cellIndex: number
+  ) => {
+    if (currRow > rowIndex && cell !== "") {
+      return getCellColor(cell, rowIndex, cellIndex);
+    }
+
+    return Colors.light.gray;
   };
 
   return (
@@ -61,14 +156,19 @@ const Page = () => {
               <View
                 style={[
                   styles.cell,
-                  { borderColor: grayColor },
-                  greenLetters.includes(cell) && { backgroundColor: "green" },
-                  yellowLetters.includes(cell) && { backgroundColor: "yellow" },
-                  grayLetters.includes(cell) && { backgroundColor: "gray" },
+                  {
+                    borderColor: getBorderColor(cell, index, cellIndex),
+                    backgroundColor: getCellColor(cell, index, cellIndex),
+                  },
                 ]}
                 key={`cell-${cellIndex}`}
               >
-                <Text style={[styles.cellText, { color: textColor }]}>
+                <Text
+                  style={[
+                    styles.cellText,
+                    { color: currRow > index ? "#fff" : "#000" },
+                  ]}
+                >
                   {cell}
                 </Text>
               </View>

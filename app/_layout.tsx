@@ -1,39 +1,113 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { router, Stack } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import {
+  useFonts,
+  FrankRuhlLibre_400Regular,
+  FrankRuhlLibre_500Medium,
+  FrankRuhlLibre_700Bold,
+  FrankRuhlLibre_900Black,
+} from "@expo-google-fonts/frank-ruhl-libre";
+import React from "react";
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "@react-navigation/native";
+import { Platform, TouchableOpacity, useColorScheme } from "react-native";
+import { ClerkProvider, ClerkLoaded } from "@clerk/clerk-expo";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Logo from "@/assets/images/nyt-logo.svg";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "@/constants/Colors";
+import { tokenCache } from "@/utils/cache";
+import Fonts from "@/constants/Fonts";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+if (!publishableKey) {
+  throw new Error(
+    "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env"
+  );
+}
+
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  let [fontsLoaded] = useFonts({
+    FrankRuhlLibre_400Regular,
+    FrankRuhlLibre_500Medium,
+    FrankRuhlLibre_700Bold,
+    FrankRuhlLibre_900Black,
   });
 
-  useEffect(() => {
-    if (loaded) {
+  React.useEffect(() => {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [fontsLoaded]);
 
-  if (!loaded) {
+  if (!fontsLoaded) {
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <ClerkLoaded>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <Stack>
+              <Stack.Screen
+                name="index"
+                options={{
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="login"
+                options={{
+                  presentation: "modal",
+                  headerShadowVisible: false,
+                  headerTitle: () => <Logo width={150} height={40} />,
+                  headerTitleAlign: "center",
+                  headerLeft: () => (
+                    <TouchableOpacity onPress={() => router.back()}>
+                      {Platform.OS === "android" ? (
+                        <Ionicons
+                          name="arrow-back"
+                          size={26}
+                          color={Colors.light.gray}
+                        />
+                      ) : (
+                        <Ionicons
+                          name="close"
+                          size={26}
+                          color={Colors.light.gray}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  ),
+                }}
+              />
+              <Stack.Screen
+                name="game"
+                options={{
+                  headerBackTitle: "5 Letters",
+                  headerTintColor: colorScheme === "dark" ? "#fff" : "#333",
+                  headerTitleAlign: "center",
+                  title: "",
+                  headerBackTitleStyle: {
+                    fontSize: 26,
+                    fontFamily: Fonts.FrankRuhlLibre_700Bold,
+                  },
+                }}
+              />
+            </Stack>
+          </GestureHandlerRootView>
+        </ThemeProvider>
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }

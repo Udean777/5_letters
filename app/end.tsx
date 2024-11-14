@@ -11,8 +11,10 @@ import { AntDesign, Ionicons } from "@expo/vector-icons";
 import Icon from "@/assets/images/wordle-icon.svg";
 import ThemedText from "@/components/ThemedText";
 import Fonts from "@/constants/Fonts";
-import { SignedIn, SignedOut } from "@clerk/clerk-expo";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
 import * as MailComposer from "expo-mail-composer";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { FIRESTORE_DB } from "@/utils/fireBaseConfig";
 
 const Page = () => {
   const { win, word, gameField } = useLocalSearchParams<{
@@ -24,13 +26,49 @@ const Page = () => {
     played: number;
     wins: number;
     currentStreak: number;
-  }>({
-    played: 42,
-    wins: 2,
-    currentStreak: 2,
-  });
+  }>();
   const colorScheme = useColorScheme();
   const bgColor = Colors[colorScheme ?? "light"].gameBg;
+  const { user } = useUser();
+
+  React.useEffect(() => {
+    if (user) {
+      updateHighScore();
+    }
+  }, [user]);
+
+  const updateHighScore = async () => {
+    // console.log("updateHighScore", user);
+    if (!user) return;
+
+    const docRef = doc(FIRESTORE_DB, `highscores/${user.id}`);
+    const docSnap = await getDoc(docRef);
+    // console.log("docSnap", docSnap);
+
+    let newScore = {
+      played: 1,
+      wins: win === "true" ? 1 : 0,
+      lastGame: win === "true" ? "win" : "loss",
+      currentStreak: win === "true" ? 1 : 0,
+    };
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+
+      newScore = {
+        played: data.played + 1,
+        wins: win === "true" ? data.wins + 1 : data.wins,
+        lastGame: win === "true" ? "win" : "loss",
+        currentStreak:
+          win === "true" && data.lastGame === "win"
+            ? data.currentStreak + 1
+            : 0,
+      };
+    }
+
+    await setDoc(docRef, newScore);
+    setUserScore(newScore);
+  };
 
   const shareGame = () => {
     const game = JSON.parse(gameField!);
@@ -162,21 +200,21 @@ const Page = () => {
         </SignedOut>
 
         <SignedIn>
-          <ThemedText style={styles.text}>Statistics</ThemedText>
+          <ThemedText style={styles.text}>Statistik</ThemedText>
           <View style={styles.stats}>
             <View>
-              <ThemedText style={styles.score}>{userScore.played}</ThemedText>
-              <ThemedText>Played</ThemedText>
+              <ThemedText style={styles.score}>{userScore?.played}</ThemedText>
+              <ThemedText>Main</ThemedText>
             </View>
             <View>
-              <ThemedText style={styles.score}>{userScore.wins}</ThemedText>
-              <ThemedText>Wins</ThemedText>
+              <ThemedText style={styles.score}>{userScore?.wins}</ThemedText>
+              <ThemedText>Menang</ThemedText>
             </View>
             <View>
               <ThemedText style={styles.score}>
-                {userScore.currentStreak}
+                {userScore?.currentStreak}
               </ThemedText>
-              <ThemedText>Current Streak</ThemedText>
+              <ThemedText>Streak Sekarang</ThemedText>
             </View>
           </View>
         </SignedIn>
@@ -184,7 +222,7 @@ const Page = () => {
         <View style={styles.separator} />
 
         <TouchableOpacity onPress={shareGame} style={styles.iconBtn}>
-          <ThemedText style={styles.btnText}>Share</ThemedText>
+          <ThemedText style={styles.btnText}>Bagikan</ThemedText>
           <Ionicons name="share-social" size={24} color={"#fff"} />
         </TouchableOpacity>
       </View>

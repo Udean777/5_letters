@@ -13,15 +13,18 @@ import { Colors } from "@/constants/Colors";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
+// Strategy untuk menggunakan OAuth
 enum Strategy {
   Google = "oauth_google",
   Facebook = "oauth_facebook",
 }
 
 const Page = () => {
+  // Oauth strategies google
   const { startOAuthFlow: googleAuth } = useOAuth({
     strategy: Strategy.Google,
   });
+  // Oauth strategies facebook
   const { startOAuthFlow: facebookAuth } = useOAuth({
     strategy: Strategy.Facebook,
   });

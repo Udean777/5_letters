@@ -104,6 +104,15 @@ export default function RootLayout() {
                   },
                 }}
               />
+              <Stack.Screen
+                name="end"
+                options={{
+                  presentation: "fullScreenModal",
+                  title: "",
+                  headerShadowVisible: false,
+                  headerBackVisible: false,
+                }}
+              />
             </Stack>
           </GestureHandlerRootView>
         </ThemeProvider>

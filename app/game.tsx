@@ -1,11 +1,23 @@
-import { StyleSheet, Text, useColorScheme, View } from "react-native";
-import React from "react";
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
+import React, { useRef } from "react";
 import { Colors } from "@/constants/Colors";
 import OnScreenKeyboard from "@/components/OnScreenKeyboard";
 import { router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { allWords } from "@/utils/allWords";
 import ThemedText from "@/components/ThemedText";
+import {
+  BottomSheetMethods,
+  BottomSheetModalMethods,
+} from "@gorhom/bottom-sheet/lib/typescript/types";
+import SettingsModal from "@/components/SettingsModal";
+import BottomSheet, { BottomSheetBackdrop } from "@gorhom/bottom-sheet";
 
 const ROWS = 6; // Baris maksimsal untuk game
 
@@ -15,6 +27,13 @@ const Page = () => {
   const bgColor = Colors[colorScheme ?? "light"].gameBg;
   const textColor = Colors[colorScheme ?? "light"].text;
   const grayColor = Colors[colorScheme ?? "light"].gray;
+
+  const snapPoints = React.useMemo(() => ["50%"], []);
+  const bottomSheetRef = useRef<BottomSheetMethods>(null);
+  const handlePresentModalPress = () => {
+    bottomSheetRef.current?.expand();
+    console.log("Clicked");
+  };
 
   // Inisialisasi state untuk grid permainan
   // Membuat array 2D dengan ROWS baris dan 5 kolom, diisi string kosong
@@ -161,6 +180,18 @@ const Page = () => {
     return Colors.light.gray; // Default border color
   };
 
+  const renderBackdrop = React.useCallback(
+    (props: any) => (
+      <BottomSheetBackdrop
+        opacity={0.2}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        {...props}
+      />
+    ),
+    []
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
       {/* Header */}
@@ -173,8 +204,10 @@ const Page = () => {
                 size={28}
                 color={textColor}
               />
-              <Ionicons name="podium-outline" size={28} color={textColor} />
-              <Ionicons name="settings-sharp" size={28} color={textColor} />
+              <Ionicons name="moon" size={28} color={textColor} />
+              <TouchableOpacity onPress={() => handlePresentModalPress()}>
+                <Ionicons name="settings-sharp" size={28} color={textColor} />
+              </TouchableOpacity>
             </View>
           ),
         }}

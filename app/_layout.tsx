@@ -21,6 +21,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
 import { tokenCache } from "@/utils/cache";
 import Fonts from "@/constants/Fonts";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -58,62 +59,64 @@ export default function RootLayout() {
           value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
         >
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <Stack>
-              <Stack.Screen
-                name="index"
-                options={{
-                  headerShown: false,
-                }}
-              />
-              <Stack.Screen
-                name="login"
-                options={{
-                  presentation: "modal",
-                  headerShadowVisible: false,
-                  headerTitle: () => <Logo width={150} height={40} />,
-                  headerTitleAlign: "center",
-                  headerLeft: () => (
-                    <TouchableOpacity onPress={() => router.back()}>
-                      {Platform.OS === "android" ? (
-                        <Ionicons
-                          name="arrow-back"
-                          size={26}
-                          color={Colors.light.gray}
-                        />
-                      ) : (
-                        <Ionicons
-                          name="close"
-                          size={26}
-                          color={Colors.light.gray}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  ),
-                }}
-              />
-              <Stack.Screen
-                name="game"
-                options={{
-                  headerBackTitle: "5 Letters",
-                  headerTintColor: colorScheme === "dark" ? "#fff" : "#333",
-                  headerTitleAlign: "center",
-                  title: "",
-                  headerBackTitleStyle: {
-                    fontSize: 26,
-                    fontFamily: Fonts.FrankRuhlLibre_700Bold,
-                  },
-                }}
-              />
-              <Stack.Screen
-                name="end"
-                options={{
-                  presentation: "fullScreenModal",
-                  title: "",
-                  headerShadowVisible: false,
-                  headerBackVisible: false,
-                }}
-              />
-            </Stack>
+            <BottomSheetModalProvider>
+              <Stack>
+                <Stack.Screen
+                  name="index"
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="login"
+                  options={{
+                    presentation: "modal",
+                    headerShadowVisible: false,
+                    headerTitle: () => <Logo width={150} height={40} />,
+                    headerTitleAlign: "center",
+                    headerLeft: () => (
+                      <TouchableOpacity onPress={() => router.back()}>
+                        {Platform.OS === "android" ? (
+                          <Ionicons
+                            name="arrow-back"
+                            size={26}
+                            color={Colors.light.gray}
+                          />
+                        ) : (
+                          <Ionicons
+                            name="close"
+                            size={26}
+                            color={Colors.light.gray}
+                          />
+                        )}
+                      </TouchableOpacity>
+                    ),
+                  }}
+                />
+                <Stack.Screen
+                  name="game"
+                  options={{
+                    headerBackTitle: "5 Letters",
+                    headerTintColor: colorScheme === "dark" ? "#fff" : "#333",
+                    headerTitleAlign: "center",
+                    title: "",
+                    headerBackTitleStyle: {
+                      fontSize: 26,
+                      fontFamily: Fonts.FrankRuhlLibre_700Bold,
+                    },
+                  }}
+                />
+                <Stack.Screen
+                  name="end"
+                  options={{
+                    presentation: "fullScreenModal",
+                    title: "",
+                    headerShadowVisible: false,
+                    headerBackVisible: false,
+                  }}
+                />
+              </Stack>
+            </BottomSheetModalProvider>
           </GestureHandlerRootView>
         </ThemeProvider>
       </ClerkLoaded>
